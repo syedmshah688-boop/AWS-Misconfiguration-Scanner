@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AWS Security Scanner Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0b1220;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 30px;
+        }
+        .btn {
+            padding: 12px 18px;
+            background: #22c55e;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 6px;
+        }
+        .card {
+            background: #111827;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+        }
+        .risk-high { color: red; }
+        .risk-medium { color: orange; }
+        .risk-low { color: #22c55e; }
+        ul { text-align: left; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>☁ AWS Misconfiguration Scanner</h1>
+
+    <form action="/scan" method="post">
+        <button class="btn">Run Scan</button>
+    </form>
+
+    {% if results %}
+    <div class="card">
+        <h2>Scan Results</h2>
+
+        {% for category, items in results.items() %}
+            <h3>{{ category }}</h3>
+            {% if items %}
+                <ul>
+                {% for i in items %}
+                    <li>⚠ {{ i }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No issues found</p>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
