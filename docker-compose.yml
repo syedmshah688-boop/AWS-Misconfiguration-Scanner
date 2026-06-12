@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  siem-app:
+    build: .
+    container_name: siem_search_head
+    ports:
+      - "5000:5000"
+    depends_on:
+      - indexer
+    environment:
+      - INDEXER_URL=http://indexer:9200
+
+  indexer:
+    image: python:3.11
+    container_name: siem_indexer
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: python indexer_service.py
+    ports:
+      - "9200:9200"
+
+  forwarder:
+    image: python:3.11
+    container_name: siem_forwarder
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: python forwarder.py
+
+volumes:
+  siem_data:
