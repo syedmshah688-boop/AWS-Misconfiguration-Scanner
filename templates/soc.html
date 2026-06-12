@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOC Dashboard</title>
+    <style>
+        body {
+            background: #0b1020;
+            color: white;
+            font-family: Arial;
+        }
+        .container {
+            padding: 20px;
+        }
+        .card {
+            background: #111827;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .critical { color: red; }
+        .high { color: orange; }
+        .medium { color: yellow; }
+        .low { color: green; }
+        button {
+            padding: 10px 15px;
+            background: #22c55e;
+            border: none;
+            color: white;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🛡 SOC Security Dashboard</h1>
+
+    <form method="post" action="/scan">
+        <button>Run Security Scan</button>
+    </form>
+
+    {% if event %}
+    <div class="card">
+        <h2>Latest Event</h2>
+        <p>Risk Level: <b>{{ event.risk_level }}</b></p>
+        <p>Score: {{ event.score }}</p>
+        <p>Time: {{ event.time }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Alerts</h2>
+        {% for a in event.alerts %}
+            <p class="{{ a.severity|lower }}">
+                [{{ a.severity }}] {{ a.category }} - {{ a.message }}
+            </p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if logs %}
+    <div class="card">
+        <h2>History</h2>
+        {% for l in logs %}
+            <p>{{ l.time }} - {{ l.risk_level }} (Score {{ l.score }})</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
