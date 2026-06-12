@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Splunk-Kibana SIEM Dashboard</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            background: #111827;
+            padding: 20px;
+        }
+
+        .main {
+            margin-left: 270px;
+            padding: 20px;
+        }
+
+        .card {
+            background: #111827;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #22c55e;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        input {
+            padding: 10px;
+            width: 300px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .critical { color: #ef4444; }
+        .high { color: #f97316; }
+        .medium { color: #eab308; }
+        .low { color: #22c55e; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>🛡 SIEM</h2>
+    <button class="btn" onclick="runScan()">Run Scan</button>
+    <br><br>
+    <input id="search" placeholder="Search logs..." />
+    <button class="btn" onclick="searchLogs()">Search</button>
+</div>
+
+<div class="main">
+
+    <h1>Splunk-Kibana Security Dashboard</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Live Events</h3>
+            <div id="liveCount">0</div>
+        </div>
+        <div class="card">
+            <h3>Critical Alerts</h3>
+            <div id="criticalCount">0</div>
+        </div>
+        <div class="card">
+            <h3>System Status</h3>
+            <div style="color:#22c55e">ONLINE</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Risk Overview</h3>
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>Live Security Events</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Source</th>
+                    <th>Category</th>
+                    <th>Severity</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody id="events"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+const socket = io();
+let eventCount = 0;
+let criticalCount = 0;
+
+const ctx = document.getElementById('chart');
+const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+            data: [0,0,0,0],
+            backgroundColor: ['#ef4444','#f97316','#eab308','#22c55e']
+        }]
+    }
+});
+
+socket.on('new_event', function(data) {
+    eventCount++;
+
+    if(data.severity === 'CRITICAL') criticalCount++;
+
+    document.getElementById('liveCount').innerText = eventCount;
+    document.getElementById('criticalCount').innerText = criticalCount;
+
+    let row = `<tr>
+        <td>${new Date().toLocaleTimeString()}</td>
+        <td>${data.source}</td>
+        <td>${data.category}</td>
+        <td class="${data.severity.toLowerCase()}">${data.severity}</td>
+        <td>${data.message}</td>
+    </tr>`;
+
+    document.getElementById('events').innerHTML += row;
+});
+
+function runScan() {
+    fetch('/api/run-scan', {method:'POST'})
+}
+
+function searchLogs() {
+    let q = document.getElementById('search').value;
+    fetch('/api/search?q=' + q)
+    .then(r => r.json())
+    .then(data => console.log(data));
+}
+</script>
+
+</body>
+</html>
